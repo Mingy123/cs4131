@@ -2,6 +2,35 @@ package com.example.cryptochat.crypto
 
 import java.math.BigInteger
 
+private fun bigIntSqrt(n: BigInteger): BigInteger {
+    if (n == BigInteger.ZERO || n == BigInteger.ONE) {
+        return n
+    }
+    var left = BigInteger.ONE
+    var right = n
+    while (left <= right) {
+        val mid = left + (right - left) / BigInteger("2")
+        val midSquared = mid * mid
+        if (midSquared == n) {
+            return mid
+        } else if (midSquared < n) {
+            left = mid + BigInteger.ONE
+        } else {
+            right = mid - BigInteger.ONE
+        }
+    }
+    return right
+}
+
+fun decodeSec1(sec1: String, curve: EcCurve) : EcPoint {
+    val char = sec1[1]
+    val y_is_odd = (char == '2')
+    val nx = BigInteger(sec1.substring(2), 16)
+    val ny = bigIntSqrt(nx.modPow(BigInteger("3", 10), curve.p).add(curve.a.multiply(nx)).add(curve.b).mod(curve.p))
+
+    val yCoordinate = if (y_is_odd) ny else curve.p.subtract(ny)
+    return EcPoint(nx, yCoordinate, curve)
+}
 
 /**
  * A point on an elliptical curve (x, y).
@@ -11,7 +40,6 @@ import java.math.BigInteger
  * @property curve The curve the point belongs to.
  */
 class EcPoint (val x : BigInteger, val y : BigInteger, val curve: EcCurve) {
-
     /**
      * Adds a point to this point.
      *
@@ -45,12 +73,11 @@ class EcPoint (val x : BigInteger, val y : BigInteger, val curve: EcCurve) {
     }
 
     override fun toString(): String {
-        val prefix = if (y.mod(BigInteger("2", 10)) == BigInteger.ONE) '3' else '2'
+        val prefix = "0" + if (y.mod(BigInteger("2", 10)) == BigInteger.ONE) '3' else '2'
         val pointBytes = x.toByteArray()
-        val ans = pointBytes.joinToString("") { String.format("%x", it) }
-        val builder = java.lang.StringBuilder(ans)
-        if (ans[0] != '0') { builder.insert(0, '0') }
-        builder.insert(1, prefix)
-        return builder.toString()
+        val ans = pointBytes.joinToString("") {
+            if (it.toInt() != 0) String.format("%02x", it) else ""
+        }
+        return prefix + ans
     }
 }

@@ -2,9 +2,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.cryptochat.MainActivity">
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+    <group>
+        <item
+            android:id="@+id/menu_logout"
+            app:showAsAction="ifRoom"
+            android:icon="@drawable/baseline_exit_to_app_24"
+            android:title="Logout" />
+        <!-- Settings, should always been in the overflow -->
+        <item
+            android:id="@+id/action_settings"
+            android:orderInCategory="100"
+            android:title="Settings"
+            app:showAsAction="never" />
+    </group>
+
 </menu>

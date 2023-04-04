@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request.Method
+import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import com.example.cryptochat.databinding.ActivityMainBinding
 import com.example.cryptochat.group.Group
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var queue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,31 +33,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val spf = getSharedPreferences("metadata", Context.MODE_PRIVATE)
-        if (spf.getString("server", null) == null) {
+        val server = spf.getString("server", null)
+        if (server == null) {
             val intent = Intent(applicationContext, Onboarding::class.java)
             startActivity(intent)
+        } else {
+            AuthorisedRequest.HOST = server
+            val keyPair = spf.getString("keypair", null)!!.split(',')
+            AuthorisedRequest.PUBKEY = keyPair[0]
+            AuthorisedRequest.SIGNATURE = spf.getString("signature", null)!!
         }
 
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-        val queue = Volley.newRequestQueue(this)
+        queue = Volley.newRequestQueue(this)
         viewModel.setRequestQueue(queue)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recycler_view)
+        recyclerView = findViewById(R.id.recycler_view)
         val list = ArrayList<Group>()
         list.add(Group("uuid", "name", "owner"))
         recyclerView.adapter = GroupAdapter(list)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        // [{"uuid":"4680a265-5515-497a-9410-c78dd9796596","name":"blohai","owner":"pubkey"}]
-        val request = AuthorisedRequest(Method.GET, "/my-groups",
-            { response ->
-                val gson = Gson()
-                val listType = object : TypeToken<ArrayList<Group>>() {}.type
-                val list = gson.fromJson<ArrayList<Group>>(response, listType)
-                recyclerView.adapter = GroupAdapter(list)
-            },
-            { Snackbar.make(binding.root, getString(R.string.network_error), Snackbar.LENGTH_LONG).show() }
-        )
-        queue.add(request)
 
         setSupportActionBar(binding.toolbar)
         binding.fab.setOnClickListener { view ->
@@ -63,17 +61,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
+    override fun onResume() {
+        super.onResume()
+        val request = AuthorisedRequest(Method.GET, "/my-groups",
+            { response ->
+                val gson = Gson()
+                val listType = object : TypeToken<ArrayList<Group>>() {}.type
+                val list = gson.fromJson<ArrayList<Group>>(response, listType)
+                recyclerView.adapter = GroupAdapter(list)
+            },
+            {}
+        )
+        queue.add(request)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                Snackbar.make(binding.root,
+                    "${AuthorisedRequest.HOST}, ${AuthorisedRequest.SIGNATURE}, ${AuthorisedRequest.PUBKEY}",
+                    Snackbar.LENGTH_LONG).show()
+                true
+            }
+            R.id.menu_logout -> {
+                val intent = Intent(applicationContext, Onboarding::class.java)
+                startActivity(intent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
     }
 }
 

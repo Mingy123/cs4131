@@ -51,6 +51,7 @@
         android:layout_marginEnd="32dp"
         android:ems="10"
         android:textAlignment="center"
+        android:inputType="textPersonName"
         android:textColor="@color/white"
         android:backgroundTint="@color/purple_700"
         app:layout_constraintEnd_toEndOf="parent"

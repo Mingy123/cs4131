@@ -17,6 +17,7 @@ import com.android.volley.toolbox.Volley
 import com.example.cryptochat.*
 import com.example.cryptochat.AuthorisedRequest
 import com.example.cryptochat.crypto.*
+import com.example.cryptochat.group.User
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -56,7 +57,7 @@ class ChatActivity : AppCompatActivity() {
                 val gson = Gson()
                 val listType = object : TypeToken<ArrayList<Message>>(){}.type
                 val list = gson.fromJson<ArrayList<Message>>(response, listType)
-                for (msg in list) { if (usernameFromPubkey(this ,msg.sender) == null) {
+                for (msg in list) { if (usernameFromPubkey(applicationContext ,msg.sender) == null) {
                     queue.add( AuthorisedRequest(Method.GET, "/user-info?pubkey="+msg.sender,
                         { response ->
                             val user = gson.fromJson(response, User::class.java)!!
@@ -129,8 +130,6 @@ class ChatActivity : AppCompatActivity() {
         disposable.dispose()
     }
 }
-
-data class User(val pubkey: String, val username: String, val nonce: String)
 
 class SendMessageRequest(method: Int, val content: String, val signature: String, val uuid: String,
     listener: (response: String) -> Unit,
