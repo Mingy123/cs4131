@@ -37,7 +37,6 @@ android {
 
 dependencies {
 
-    implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'com.android.volley:volley:1.2.1'
     implementation 'androidx.core:core-ktx:1.7.0'

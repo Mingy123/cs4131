@@ -1,7 +1,6 @@
 package com.example.cryptochat.onboarding
 
 import android.content.Context
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -63,7 +62,6 @@ class Onboarding : AppCompatActivity() {
                 val user = gson.fromJson(response, User::class.java)!!
                 // set AuthorisedRequest stuff
                 val signature = EcSign.signData(keyPair, user.nonce.toByteArray(), EcSha256).toString()
-                Toast.makeText(applicationContext, user.nonce, Toast.LENGTH_LONG).show()
                 AuthorisedRequest.HOST = host
                 AuthorisedRequest.PUBKEY = pubkey
                 AuthorisedRequest.SIGNATURE = signature

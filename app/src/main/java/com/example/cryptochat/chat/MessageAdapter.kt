@@ -7,6 +7,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cryptochat.R
+import com.example.cryptochat.hashColor
 import com.example.cryptochat.usernameFromPubkey
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
@@ -49,6 +50,7 @@ class MessageAdapter(val msgList: ArrayList<Message>) :
             val username = usernameFromPubkey(itemView.context, msg.sender)
             if (username == null) msgSender.text = msg.sender.substring(16) + "..."
             else msgSender.text = username
+            msgSender.setTextColor(hashColor(msgSender.text.toString()))
             msgContent.text = msg.content
             val date = Date()
             date.time = msg.timestamp
