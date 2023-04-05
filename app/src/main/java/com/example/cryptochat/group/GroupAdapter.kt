@@ -31,6 +31,7 @@ class GroupAdapter(val groupList: ArrayList<Group>) :
             groupUuid = itemView.findViewById(R.id.groupUuid)
             itemView.setOnClickListener { view ->
                 val intent = Intent(itemView.context, ChatActivity::class.java)
+                intent.putExtra("name", groupName.text)
                 intent.putExtra("uuid", groupUuid.text)
                 itemView.context.startActivity(intent)
             }

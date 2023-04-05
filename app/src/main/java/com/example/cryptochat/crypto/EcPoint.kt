@@ -1,6 +1,9 @@
 package com.example.cryptochat.crypto
 
+import android.util.Log
 import java.math.BigInteger
+
+val two: BigInteger = BigInteger.valueOf(2)
 
 private fun bigIntSqrt(n: BigInteger): BigInteger {
     if (n == BigInteger.ZERO || n == BigInteger.ONE) {
@@ -22,14 +25,66 @@ private fun bigIntSqrt(n: BigInteger): BigInteger {
     return right
 }
 
-fun decodeSec1(sec1: String, curve: EcCurve) : EcPoint {
-    val char = sec1[1]
-    val y_is_odd = (char == '2')
-    val nx = BigInteger(sec1.substring(2), 16)
-    val ny = bigIntSqrt(nx.modPow(BigInteger("3", 10), curve.p).add(curve.a.multiply(nx)).add(curve.b).mod(curve.p))
+fun shanksTonelli(n: BigInteger, p: BigInteger): BigInteger? {
+    val legendreSymbol = n.modPow((p - BigInteger.ONE) / two, p)
+    if (legendreSymbol != BigInteger.ONE) {
+        // If n is not a quadratic residue, return null
+        return null
+    }
 
-    val yCoordinate = if (y_is_odd) ny else curve.p.subtract(ny)
-    return EcPoint(nx, yCoordinate, curve)
+    var q = p - BigInteger.ONE
+    var s = 0
+    while (q % two == BigInteger.ZERO) {
+        q /= two
+        s++
+    }
+
+    var z = two
+    while (z.modPow((p - BigInteger.ONE) / two, p) == BigInteger.ONE) {
+        z++
+    }
+
+    var c = z.modPow(q, p)
+    var r = n.modPow((q + BigInteger.ONE) / two, p)
+    var t = n.modPow(q, p)
+    var m = s
+
+    while (t != BigInteger.ONE) {
+        var i = 0
+        var ts = t
+        while (ts != BigInteger.ONE) {
+            ts = ts.modPow(two, p)
+            i++
+        }
+
+        val b = c.modPow(two.pow(m - i - 1), p)
+        r = r * b % p
+        t = t * b.modPow(two, p) % p
+        c = b.modPow(two, p)
+        m = i
+    }
+
+    return r
+}
+
+fun decodeSec1(sec1: String, curve: EcCurve) : EcPoint? {
+    val char = sec1[1]
+    val y_is_even = (char == '2')
+    val nx = BigInteger(sec1.substring(2), 16)
+    val alpha = nx.modPow(BigInteger.valueOf(3), curve.p) + (curve.a.multiply(nx).add(curve.b)).mod(curve.p)
+    Log.d("asd", "asd")
+    Log.d("asd", shanksTonelli(BigInteger.valueOf(2), BigInteger.valueOf(113)).toString())
+    Log.d("asd", "asd")
+    Log.d("asd", "asd")
+    Log.d("asd", "asd")
+    val beta = shanksTonelli(alpha, curve.p) ?: return null
+    Log.d("asd", "yay")
+    val ny: BigInteger;
+    if (y_is_even == (beta.mod(BigInteger.valueOf(2)) == BigInteger.ONE))
+        ny = curve.p.subtract(beta)
+    else ny = beta
+
+    return EcPoint(nx, ny, curve)
 }
 
 /**

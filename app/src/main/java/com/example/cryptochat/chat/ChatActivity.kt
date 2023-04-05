@@ -14,10 +14,7 @@ import com.android.volley.toolbox.Volley
 import com.example.cryptochat.AuthorisedRequest
 import com.example.cryptochat.MainViewModel
 import com.example.cryptochat.R
-import com.example.cryptochat.crypto.EcKeyGenerator
-import com.example.cryptochat.crypto.EcSha256
-import com.example.cryptochat.crypto.EcSign
-import com.example.cryptochat.crypto.Secp256k1
+import com.example.cryptochat.crypto.*
 import com.example.cryptochat.group.User
 import com.example.cryptochat.usernameFromPubkey
 import com.google.android.material.snackbar.Snackbar
@@ -54,6 +51,7 @@ class ChatActivity : AppCompatActivity() {
         adapter = MessageAdapter(messageList)
         messageListView.adapter = adapter
         uuid = intent.getStringExtra("uuid")!!
+        supportActionBar?.title = intent.getStringExtra("name")
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         var queue = viewModel.getRequestQueue()
         if (queue == null) {
@@ -105,7 +103,20 @@ class ChatActivity : AppCompatActivity() {
         val now = Calendar.getInstance().timeInMillis
         findViewById<ImageButton>(R.id.sendMessage).setOnClickListener { view ->
             val content = editText.text.toString()
-            val signature = EcSign.signData(keyPair, content.toByteArray(), EcSha256).toString()
+            val tmp = EcSign.signData(keyPair, content.toByteArray(), EcSha256)
+            val signature = tmp.toString()
+            val thing = signature.split(',')
+            val sig = EcSignature(BigInteger(thing[0], 16), BigInteger(thing[1], 16))
+            val pk = decodeSec1(AuthorisedRequest.PUBKEY, Secp256k1)!!
+            val correct = EcSign.verifySignature(
+                pk,
+                content.toByteArray(), EcSha256,
+                sig
+            )
+            if (!correct) {
+                editText.setText("${keyPair.publicKey.x.toString(16)}, ${keyPair.publicKey.y.toString(16)}, ${pk.x.toString(16)}, ${pk.y.toString(16)}")
+                return@setOnClickListener
+            }
             val request = SendMessageRequest(Request.Method.POST, content, signature, uuid,
                 { response ->
                     messageList.add(Message(
