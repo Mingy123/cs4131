@@ -1,4 +1,4 @@
-package com.example.cryptochat.onboarding
+package com.example.cryptochat
 
 import android.content.Context
 import android.content.Intent
@@ -7,19 +7,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import com.android.volley.Request.Method
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.example.cryptochat.AuthorisedRequest
-import com.example.cryptochat.MainViewModel
-import com.example.cryptochat.R
 import com.example.cryptochat.crypto.*
 import com.example.cryptochat.group.User
-import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import java.math.BigInteger
 

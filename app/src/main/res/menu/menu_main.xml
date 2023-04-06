@@ -8,7 +8,15 @@
             app:showAsAction="ifRoom"
             android:icon="@drawable/baseline_exit_to_app_24"
             android:title="Logout" />
-        <!-- Settings, should always been in the overflow -->
+        <item
+            android:id="@+id/menu_contacts"
+            app:showAsAction="ifRoom"
+            android:icon="@drawable/baseline_person_24"
+            android:title="Contacts" />
+        <item
+            android:id="@+id/menu_new_group"
+            app:showAsAction="never"
+            android:title="Create Group" />
         <item
             android:id="@+id/action_settings"
             android:orderInCategory="100"

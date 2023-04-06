@@ -1,7 +1,10 @@
 package com.example.cryptochat.chat
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
@@ -9,13 +12,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.Volley
 import com.example.cryptochat.AuthorisedRequest
 import com.example.cryptochat.MainViewModel
 import com.example.cryptochat.R
 import com.example.cryptochat.crypto.*
-import com.example.cryptochat.group.User
+import com.example.cryptochat.group.GroupDetailActivity
 import com.example.cryptochat.usernameFromPubkey
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
@@ -28,13 +32,18 @@ import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 class ChatActivity : AppCompatActivity() {
     val messageList = ArrayList<Message>()
     lateinit var messageListView: RecyclerView
+    lateinit var layoutManager: LinearLayoutManager
     lateinit var adapter: MessageAdapter
     private lateinit var editText: EditText
     private lateinit var uuid: String
+    private lateinit var groupName: String
+    private lateinit var queue: RequestQueue
     private lateinit var connection: HttpURLConnection
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,78 +56,36 @@ class ChatActivity : AppCompatActivity() {
 
         // init the chat
         messageListView = findViewById(R.id.messageList)
-        messageListView.layoutManager = LinearLayoutManager(this)
+        layoutManager = LinearLayoutManager(this)
+        messageListView.layoutManager = layoutManager
         adapter = MessageAdapter(messageList)
         messageListView.adapter = adapter
         uuid = intent.getStringExtra("uuid")!!
-        supportActionBar?.title = intent.getStringExtra("name")
+        groupName = intent.getStringExtra("name")!!
+        supportActionBar?.title = groupName
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         var queue = viewModel.getRequestQueue()
         if (queue == null) {
             queue = Volley.newRequestQueue(this)
             viewModel.setRequestQueue(queue)
         }
-        queue.add(object : AuthorisedRequest(Method.POST, "/messages",
-            { response ->
-                val gson = Gson()
-                val listType = object : TypeToken<ArrayList<Message>>(){}.type
-                val list = gson.fromJson<ArrayList<Message>>(response, listType)
-                for (msg in list) { if (usernameFromPubkey(applicationContext ,msg.sender) == null) {
-                    queue.add( AuthorisedRequest(Method.GET, "/user-info?pubkey="+msg.sender,
-                        { resp ->
-                            val user2 = gson.fromJson(resp, User::class.java)!!
-                            val spf2 = getSharedPreferences("appcache", Context.MODE_PRIVATE)
-                            val edit = spf2.edit()
-                            edit.putString(msg.sender, user2.username)
-                            edit.apply()
-                        },
-                        {}
-                    ) )
-                } }
-                list.reverse()
-                val startIndex = messageList.size
-                messageList.addAll(list)
-                adapter.notifyItemRangeInserted(startIndex, list.size)
-                messageListView.scrollToPosition(messageList.size-1)
-            },
-            {}) {
-            override fun getParams(): MutableMap<String, String> {
-                val old = super.getParams()
-                val new = HashMap<String, String>()
-                if (old != null) {
-                    for ((key, value) in old) {
-                        new[key] = value
-                    }
-                }
-                // init timestamp, 10 sec offset cos why not
-                val now = Calendar.getInstance().timeInMillis.toString() + 10000
-                new["timestamp"] = now
-                new["uuid"] = uuid
-                return new
-            }
+        this.queue = queue
+        queue.add(getMessagesBefore(Calendar.getInstance().timeInMillis + 1000000 // offset 1000 seconds cos why not
+        ) { list ->
+            val startIndex = messageList.size
+            messageList.addAll(list)
+            adapter.notifyItemRangeInserted(startIndex, list.size)
+            messageListView.scrollToPosition(messageList.size - 1)
         })
 
         // sending messages
         editText = findViewById(R.id.messageInput)
-        val now = Calendar.getInstance().timeInMillis
         findViewById<ImageButton>(R.id.sendMessage).setOnClickListener { view ->
             val content = editText.text.toString()
-            val tmp = EcSign.signData(keyPair, content.toByteArray(), EcSha256)
-            val signature = tmp.toString()
-            val thing = signature.split(',')
-            val sig = EcSignature(BigInteger(thing[0], 16), BigInteger(thing[1], 16))
-            val pk = decodeSec1(AuthorisedRequest.PUBKEY, Secp256k1)!!
-            val correct = EcSign.verifySignature(
-                pk,
-                content.toByteArray(), EcSha256,
-                sig
-            )
-            if (!correct) {
-                editText.setText("${keyPair.publicKey.x.toString(16)}, ${keyPair.publicKey.y.toString(16)}, ${pk.x.toString(16)}, ${pk.y.toString(16)}")
-                return@setOnClickListener
-            }
+            val signature = EcSign.signData(keyPair, content.toByteArray(), EcSha256).toString()
             val request = SendMessageRequest(Request.Method.POST, content, signature, uuid,
                 { response ->
+                    val now = Calendar.getInstance().timeInMillis
                     messageList.add(Message(
                         content, keyPair.publicKey.toString(), signature,
                         now, response
@@ -131,6 +98,19 @@ class ChatActivity : AppCompatActivity() {
             )
             queue.add(request)
         }
+
+        // get more messages
+        messageListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                // when its at the top it should be idle
+                if (newState != RecyclerView.SCROLL_STATE_IDLE) return super.onScrollStateChanged(recyclerView, newState)
+                val thing = layoutManager.findFirstVisibleItemPosition()
+                if (thing == 0) queue.add(getMessagesBefore(messageList[0].timestamp) { list ->
+                    messageList.addAll(0, list)
+                    adapter.notifyItemRangeInserted(0, list.size)
+                })
+            }
+        })
 
         // eye candy
         editText.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
@@ -189,6 +169,54 @@ class ChatActivity : AppCompatActivity() {
         }
         //connection.disconnect()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_chat, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_chat_info -> {
+                val intent = Intent(this, GroupDetailActivity::class.java)
+                intent.putExtra("uuid", uuid)
+                intent.putExtra("name", groupName)
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun getMessagesBefore(timestamp: Long, todo: (ArrayList<Message>) -> Unit): AuthorisedRequest {
+        return object : AuthorisedRequest(Method.POST, "/messages",
+            { response ->
+                val gson = Gson()
+                val listType = object : TypeToken<ArrayList<Message>>(){}.type
+                val list = gson.fromJson<ArrayList<Message>>(response, listType)
+
+                val pubkeyList = HashSet<String>()
+                for (msg in list) pubkeyList.add(msg.sender)
+                for (pk in pubkeyList) usernameFromPubkey(applicationContext, pk, queue)
+
+                list.reverse()
+                todo(list)
+            },
+            {}) {
+            override fun getParams(): MutableMap<String, String> {
+                val old = super.getParams()
+                val new = HashMap<String, String>()
+                if (old != null) {
+                    for ((key, value) in old) {
+                        new[key] = value
+                    }
+                }
+                new["timestamp"] = timestamp.toString()
+                new["uuid"] = uuid
+                return new
+            }
+        }
+    }
 }
 
 class SendMessageRequest(method: Int, val content: String, val signature: String, val uuid: String,
@@ -196,7 +224,7 @@ class SendMessageRequest(method: Int, val content: String, val signature: String
     errorListener: (error: VolleyError) -> Unit,
 ) : AuthorisedRequest(method, "/send", listener, errorListener)
 {
-    override fun getParams(): MutableMap<String, String>? {
+    override fun getParams(): MutableMap<String, String> {
         val old = super.getParams()
         val new = HashMap<String, String>()
         if (old != null) { for ((key, value) in old) new[key] = value }

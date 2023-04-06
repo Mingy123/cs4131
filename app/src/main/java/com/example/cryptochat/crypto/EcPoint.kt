@@ -1,29 +1,8 @@
 package com.example.cryptochat.crypto
 
-import android.util.Log
 import java.math.BigInteger
 
 val two: BigInteger = BigInteger.valueOf(2)
-
-private fun bigIntSqrt(n: BigInteger): BigInteger {
-    if (n == BigInteger.ZERO || n == BigInteger.ONE) {
-        return n
-    }
-    var left = BigInteger.ONE
-    var right = n
-    while (left <= right) {
-        val mid = left + (right - left) / BigInteger("2")
-        val midSquared = mid * mid
-        if (midSquared == n) {
-            return mid
-        } else if (midSquared < n) {
-            left = mid + BigInteger.ONE
-        } else {
-            right = mid - BigInteger.ONE
-        }
-    }
-    return right
-}
 
 fun shanksTonelli(n: BigInteger, p: BigInteger): BigInteger? {
     val legendreSymbol = n.modPow((p - BigInteger.ONE) / two, p)
@@ -68,21 +47,13 @@ fun shanksTonelli(n: BigInteger, p: BigInteger): BigInteger? {
 }
 
 fun decodeSec1(sec1: String, curve: EcCurve) : EcPoint? {
-    val char = sec1[1]
-    val y_is_even = (char == '2')
+    val y_is_even = (sec1[1] == '2')
     val nx = BigInteger(sec1.substring(2), 16)
     val alpha = nx.modPow(BigInteger.valueOf(3), curve.p) + (curve.a.multiply(nx).add(curve.b)).mod(curve.p)
-    Log.d("asd", "asd")
-    Log.d("asd", shanksTonelli(BigInteger.valueOf(2), BigInteger.valueOf(113)).toString())
-    Log.d("asd", "asd")
-    Log.d("asd", "asd")
-    Log.d("asd", "asd")
     val beta = shanksTonelli(alpha, curve.p) ?: return null
-    Log.d("asd", "yay")
-    val ny: BigInteger;
-    if (y_is_even == (beta.mod(BigInteger.valueOf(2)) == BigInteger.ONE))
-        ny = curve.p.subtract(beta)
-    else ny = beta
+    val ny = if (y_is_even == (beta.mod(BigInteger.valueOf(2)) == BigInteger.ONE))
+        curve.p.subtract(beta)
+    else beta
 
     return EcPoint(nx, ny, curve)
 }
@@ -128,7 +99,7 @@ class EcPoint (val x : BigInteger, val y : BigInteger, val curve: EcCurve) {
     }
 
     override fun toString(): String {
-        val prefix = "0" + if (y.mod(BigInteger("2", 10)) == BigInteger.ONE) '3' else '2'
+        val prefix = "0" + if (y.mod(BigInteger.valueOf(2)) == BigInteger.ONE) '3' else '2'
         val pointBytes = x.toByteArray()
         val ans = pointBytes.joinToString("") {
             if (it.toInt() != 0) String.format("%02x", it) else ""

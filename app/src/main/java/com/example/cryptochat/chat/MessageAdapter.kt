@@ -1,11 +1,11 @@
 package com.example.cryptochat.chat
 
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request.Method
@@ -16,13 +16,10 @@ import com.example.cryptochat.crypto.*
 import com.example.cryptochat.hashColor
 import com.example.cryptochat.usernameFromPubkey
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.math.BigInteger
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.coroutines.coroutineContext
 
 class MessageAdapter(val msgList: ArrayList<Message>) :
     RecyclerView.Adapter<MessageAdapter.ViewHolder>() {
@@ -47,11 +44,20 @@ class MessageAdapter(val msgList: ArrayList<Message>) :
             msgSender = itemView.findViewById(R.id.messageSender)
             msgContent = itemView.findViewById(R.id.messageContent)
             msgTimestamp = itemView.findViewById(R.id.messageTimestamp)
+            itemView.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> itemView.setBackgroundColor(itemView.context.getColor(R.color.purple_700))
+                    MotionEvent.ACTION_UP -> itemView.setBackgroundResource(android.R.color.transparent)
+                    MotionEvent.ACTION_CANCEL -> itemView.setBackgroundResource(android.R.color.transparent)
+                }
+                false
+            }
             itemView.setOnLongClickListener { view ->
                 val context = view.context
                 val queue = Volley.newRequestQueue(view.context)
                 val request = AuthorisedRequest(Method.GET, "/message-info?hash=${msg.hash}",
                     { response ->
+                        itemView.setBackgroundResource(android.R.color.transparent)
                         // ignoring the message's group
                         val part = response.substringAfter(',').dropLast(1)
                         // TODO: create dialog
@@ -87,7 +93,6 @@ class MessageAdapter(val msgList: ArrayList<Message>) :
                         }
 
                         dialog.setView(popup)
-                        dialog.setTitle(context.getString(R.string.message_details_title))
                         dialog.show()
                     },
                     {
@@ -103,7 +108,7 @@ class MessageAdapter(val msgList: ArrayList<Message>) :
         fun bindItems(msg: Message) {
             this.msg = msg
             val username = usernameFromPubkey(itemView.context, msg.sender)
-            if (username == null) msgSender.text = msg.sender.substring(16) + "..."
+            if (username == null) msgSender.text = msg.sender
             else msgSender.text = username
             msgSender.setTextColor(hashColor(msg.sender))
             msgContent.text = msg.content

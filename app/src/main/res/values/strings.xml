@@ -2,7 +2,8 @@
     <string name="app_name">CryptoChat</string>
     <string name="action_settings">Settings</string>
     <string name="network_error">A network error occurred.</string>
-    <string name="message_details_title">Message Details</string>
     <string name="signature_correct">Signature is correct!</string>
     <string name="signature_wrong">WARNING: Signature is incorrect!</string>
+    <string name="create_group_success">Successfully created a new group!</string>
+    <string name="clipboard_success">Copied to clipboard</string>
 </resources>

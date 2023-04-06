@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="2dp"
+    android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="8dp"
     android:clickable="true">
 
@@ -12,9 +12,9 @@
         android:id="@+id/groupUuid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
         android:text="TextView"
+        android:textAlignment="center"
         android:textSize="12sp"
         android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,7 +24,7 @@
         android:id="@+id/groupName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:ellipsize="end"
         android:singleLine="true"
         android:text="TextView"
@@ -37,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="16dp"
-        android:background="#888888"
+        android:background="@color/neutral_dark"
         app:layout_constraintTop_toBottomOf="@id/groupUuid" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

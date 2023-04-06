@@ -22,7 +22,7 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Sender"
-        android:maxEms="16"
+        android:maxEms="14"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"

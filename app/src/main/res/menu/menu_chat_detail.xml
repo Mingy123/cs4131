@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+tools:context=".group.GroupDetailActivity">
+<group>
+    <item
+        android:id="@+id/menu_chat_edit"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/baseline_edit_24"
+        android:title="Chat Info" />
+    <item
+        android:id="@+id/menu_chat_delete"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/baseline_delete_24"
+        android:title="Delete Chat" />
+</group>
+
+</menu>
