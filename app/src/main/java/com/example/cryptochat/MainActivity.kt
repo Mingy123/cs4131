@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
     private lateinit var recyclerView: RecyclerView
+    private lateinit var groupList: ArrayList<Group>
     private lateinit var queue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,8 +62,8 @@ class MainActivity : AppCompatActivity() {
         this.queue = queue
 
         recyclerView = findViewById(R.id.recycler_view)
-        val list = ArrayList<Group>()
-        recyclerView.adapter = GroupAdapter(list)
+        groupList = ArrayList()
+        recyclerView.adapter = GroupAdapter(groupList)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
 
@@ -78,7 +79,8 @@ class MainActivity : AppCompatActivity() {
                 queue.add(object : AuthorisedRequest(Method.POST, "/join-group",
                     { response ->
                         Snackbar.make(view, response, Snackbar.LENGTH_SHORT).show()
-                        if (response == "success") onResume()
+                        if (response == "success")
+                            refreshGroups { recyclerView.scrollToPosition(groupList.size-1) }
                         joinGroupDialog.dismiss()
                     }, {
                         Toast.makeText(applicationContext, getString(R.string.network_error),
@@ -101,18 +103,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun refreshGroups(fn: () -> Unit) {
         val request = AuthorisedRequest(Method.GET, "/my-groups",
             { response ->
                 val gson = Gson()
                 val listType = object : TypeToken<ArrayList<Group>>() {}.type
-                val list = gson.fromJson<ArrayList<Group>>(response, listType)
-                recyclerView.adapter = GroupAdapter(list)
+                groupList = gson.fromJson(response, listType)
+                recyclerView.adapter = GroupAdapter(groupList)
+                fn()
             },
             {}
         )
         queue.add(request)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshGroups {}
     }
 
     lateinit var joinGroupDialog: AlertDialog
@@ -141,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_new_group -> {
                 queue.add(AuthorisedRequest(Method.POST, "/create-group",
                     {
-                        onResume()
+                        refreshGroups { recyclerView.scrollToPosition(groupList.size-1) }
                         Snackbar.make(recyclerView, getString(R.string.create_group_success),
                             Snackbar.LENGTH_SHORT).show()
                     }, {

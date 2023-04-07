@@ -25,6 +25,7 @@ import java.util.HashMap
 import android.Manifest
 import android.content.Intent
 import android.provider.MediaStore
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatDelegate
 
 const val REQUEST_GALLERY_CODE = 300
@@ -80,9 +81,9 @@ class SettingsActivity : AppCompatActivity() {
             true
         }
 
+        val privkey = BigInteger(spf.getString("keypair", null)!!.split(',')[1], 16)
+        val keyPair = EcKeyGenerator.newInstance(privkey, Secp256k1)
         findViewById<Button>(R.id.settingsResetNonce).setOnClickListener { view ->
-            val privkey = BigInteger(spf.getString("keypair", null)!!.split(',')[1], 16)
-            val keyPair = EcKeyGenerator.newInstance(privkey, Secp256k1)
             val path = "${AuthorisedRequest.HOST}/reset-nonce"
             queue.add(StringRequest(Method.GET, "$path?pubkey=${keyPair.publicKey}",
                 { response ->
@@ -107,6 +108,12 @@ class SettingsActivity : AppCompatActivity() {
                 }, { Toast.makeText(applicationContext, getString(R.string.network_error), Toast.LENGTH_SHORT).show() }
             ))
         }
+
+
+        findViewById<TextView>(R.id.settingServer).text = "Server: " + AuthorisedRequest.HOST
+        findViewById<TextView>(R.id.settingUsername).text = "Username: " + spf.getString("username", "")
+        findViewById<TextView>(R.id.settingPubkey).text = "Public key: " + keyPair.publicKey.toString()
+        findViewById<TextView>(R.id.settingPrivkey).text = "Private key:" + keyPair.privateKey.toString(16)
     }
 
     private fun checkAndRequestPermissions(context: Activity?): Boolean {

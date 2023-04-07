@@ -76,7 +76,6 @@
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
         android:text="Private key"
-        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/settingPubkey" />
@@ -100,7 +99,6 @@
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
         android:text="Public Key"
-        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
