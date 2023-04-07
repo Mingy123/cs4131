@@ -13,6 +13,6 @@ import java.util.*
  */
 class EcSignature (val r : BigInteger, val s : BigInteger) {
     override fun toString(): String {
-        return "${r.toString(16)},${s.toString(16)}"
+        return "${r.toString(16).padStart(16, '0')},${s.toString(16).padStart(16, '0')}"
     }
 }

@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    override fun getParams(): MutableMap<String, String>? {
+                    override fun getParams(): MutableMap<String, String> {
                         val old = super.getParams()
                         val new = HashMap<String, String>()
                         if (old != null) {
@@ -116,12 +116,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var joinGroupDialog: AlertDialog
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_settings -> {
-                Snackbar.make(binding.root,
-                    "${AuthorisedRequest.HOST}, ${AuthorisedRequest.SIGNATURE}, ${AuthorisedRequest.PUBKEY}",
-                    Snackbar.LENGTH_LONG).show()
-                true
-            }
             R.id.menu_logout -> {
                 val intent = Intent(applicationContext, Onboarding::class.java)
                 startActivity(intent)
@@ -142,6 +136,11 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.menu_contacts -> {
                 val intent = Intent(applicationContext, ContactsActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            R.id.action_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
                 true
             }

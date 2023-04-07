@@ -6,4 +6,5 @@
     <string name="signature_wrong">WARNING: Signature is incorrect!</string>
     <string name="create_group_success">Successfully created a new group!</string>
     <string name="clipboard_success">Copied to clipboard</string>
+    <string name="jump_newest_msg">Jump to newest message when you select the message box</string>
 </resources>

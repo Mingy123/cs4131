@@ -12,6 +12,7 @@ fun usernameFromPubkey(context: Context, pubkey: String, queue: RequestQueue): S
     val spf = context.getSharedPreferences("appcache", Context.MODE_PRIVATE)
     var username = spf.getString(pubkey, null)
     if (username == null) {
+        username = "fetching..."
         queue.add(AuthorisedRequest(
             Request.Method.GET, "/user-info?pubkey=$pubkey",
             { response ->
@@ -23,13 +24,12 @@ fun usernameFromPubkey(context: Context, pubkey: String, queue: RequestQueue): S
                 if (users == null) edit.putString("userlist", pubkey)
                 else edit.putString("userlist", "$users|$pubkey")
                 edit.apply()
-                username = user.username
+                username = user.username // probably not fast enough
             }, {
                 Toast.makeText(context, context.getString(R.string.network_error), Toast.LENGTH_SHORT).show()
             }
         ))
     }
-    if (username == null) username = "network error"
     return username as String
 }
 

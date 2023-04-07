@@ -2,11 +2,15 @@ package com.example.cryptochat.chat
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -53,6 +57,13 @@ class ChatActivity : AppCompatActivity() {
         val privkey = BigInteger(spf.getString("keypair", null)!!.split(',')[1], 16)
         val keyPair = EcKeyGenerator.newInstance(privkey, Secp256k1)
         val user = keyPair.publicKey.toString()
+
+        // wallpaper wow
+        val imageUri = spf.getString("wallpaper", null)
+        for (i in 0..10) Log.d("mingy", imageUri.toString())
+        val imageView = findViewById<ImageView>(R.id.chatWallpaper)
+        if (imageUri == null) imageView.visibility = View.INVISIBLE
+        else imageView.setImageURI(Uri.parse(imageUri))
 
         // init the chat
         messageListView = findViewById(R.id.messageList)
@@ -113,9 +124,10 @@ class ChatActivity : AppCompatActivity() {
         })
 
         // eye candy
-        editText.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            messageListView.scrollToPosition(messageList.size-1)
-        }
+        if (spf.getBoolean("scroll", true))
+            editText.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                messageListView.scrollToPosition(messageList.size-1)
+            }
 
         // THE FUCKING EVENT STREAM THING
         val coroutineScope = CoroutineScope(Dispatchers.IO)

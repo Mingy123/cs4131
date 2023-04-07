@@ -43,10 +43,9 @@ class Onboarding : AppCompatActivity() {
 
     fun genRandomKey(view: View) {
         val keyPair = EcKeyGenerator.newInstance(Secp256k1)
-        privkey.setText(keyPair.privateKey.toString(16))
+        privkey.setText(keyPair.privateKey.toString(16).padStart(64, '0'))
     }
 
-    // TODO: literally everything
     fun submit(view: View) {
         val privateKey = BigInteger(privkey.text.toString(), 16)
         val keyPair = EcKeyGenerator.newInstance(privateKey, Secp256k1)
@@ -68,7 +67,7 @@ class Onboarding : AppCompatActivity() {
                 val spf = getSharedPreferences("metadata", Context.MODE_PRIVATE)
                 val edit = spf.edit()
                 edit.putString("server", host)
-                edit.putString("keypair", pubkey + "," + privateKey.toString(16))
+                edit.putString("keypair", pubkey + "," + privateKey.toString(16).padStart(16, '0'))
                 edit.putString("username", user.username)
                 edit.putString("signature", signature)
                 edit.apply()
@@ -82,7 +81,8 @@ class Onboarding : AppCompatActivity() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(host))
             val dialog = AlertDialog.Builder(view.context)
             dialog.setTitle(view.context.getString(R.string.network_error))
-            dialog.setMessage("Try checking the host in browser?")
+            dialog.setMessage("Either the server is not responding, or your key is invalid.\n" +
+                    "Try checking the host in browser?")
             dialog.setPositiveButton("OK") { _, _ -> startActivity(intent) }
             dialog.setNeutralButton("Cancel") { _, _ -> }
             dialog.show()
