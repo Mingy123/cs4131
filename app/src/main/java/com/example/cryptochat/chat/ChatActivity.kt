@@ -38,9 +38,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import java.net.HttpURLConnection
+import java.net.SocketException
 import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 class ChatActivity : AppCompatActivity() {
@@ -57,6 +59,10 @@ class ChatActivity : AppCompatActivity() {
     private var active = false
     private lateinit var notificationManager: NotificationManager
     private lateinit var channelID: String
+
+    companion object {
+        val connections = HashMap<String, HttpURLConnection>()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -142,11 +148,13 @@ class ChatActivity : AppCompatActivity() {
 
         // THE FUCKING EVENT STREAM THING
         val coroutineScope = CoroutineScope(Dispatchers.IO)
+        connections[uuid]?.disconnect()
         coroutineScope.launch {
             val url = URL(AuthorisedRequest.HOST + "/subscribe")
             connection = withContext(Dispatchers.IO) {
                 url.openConnection()
             } as HttpURLConnection
+            connections[uuid] = connection
             connection.requestMethod = "POST"
             connection.setRequestProperty("Accept", "text/event-stream")
             connection.setRequestProperty("X-Pubkey", AuthorisedRequest.PUBKEY)
@@ -165,6 +173,7 @@ class ChatActivity : AppCompatActivity() {
 
             val reader = connection.inputStream.bufferedReader(Charsets.UTF_8)
 
+            try {
             while (true) {
                 Log.d("mingy", "eventstream is listening...")
                 Log.d("mingy", "Active: $active")
@@ -195,7 +204,7 @@ class ChatActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }
+            }} catch (_ : SocketException) { } // cry about it
         }
     }
 

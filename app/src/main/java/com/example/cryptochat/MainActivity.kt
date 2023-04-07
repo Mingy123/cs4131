@@ -2,6 +2,7 @@ package com.example.cryptochat
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.snackbar.Snackbar
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request.Method
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
+import com.example.cryptochat.chat.ChatActivity
 import com.example.cryptochat.contact.ContactsActivity
 import com.example.cryptochat.databinding.ActivityMainBinding
 import com.example.cryptochat.group.Group
@@ -117,8 +119,23 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_logout -> {
-                val intent = Intent(applicationContext, Onboarding::class.java)
-                startActivity(intent)
+                val dialog = AlertDialog.Builder(this)
+                dialog.setTitle("Confirm?")
+                dialog.setMessage("You are about to log out.\nIf you continue, all data will be wiped.")
+                dialog.setPositiveButton("EXIT") { _, _ ->
+                    val metadata = getSharedPreferences("metadata", Context.MODE_PRIVATE).edit()
+                    metadata.clear()
+                    metadata.apply()
+                    val appcache = getSharedPreferences("appcache", Context.MODE_PRIVATE).edit()
+                    appcache.clear()
+                    appcache.apply()
+                    // delete all connections (eventstream)
+                    for (conn in ChatActivity.connections.values) conn.disconnect()
+                    val intent = Intent(applicationContext, Onboarding::class.java)
+                    startActivity(intent)
+                }
+                dialog.setNeutralButton("Cancel") {_,_->}
+                dialog.show()
                 true
             }
             R.id.menu_new_group -> {

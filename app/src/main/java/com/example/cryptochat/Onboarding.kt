@@ -50,9 +50,13 @@ class Onboarding : AppCompatActivity() {
         val privateKey = BigInteger(privkey.text.toString(), 16)
         val keyPair = EcKeyGenerator.newInstance(privateKey, Secp256k1)
 
-        val host = server.text.toString().removeSuffix("/")
+        var host = server.text.toString().removeSuffix("/")
+        if (!host.contains("://")) {
+            // WARNING: change to https when my backend supports it
+            host = "http://$host"
+        }
         val pubkey = keyPair.publicKey.toString()
-        // check that the user is in the server using "/user-info"
+        // check that the user is in the server using
         val request = StringRequest(Method.GET, "$host/user-info?pubkey=$pubkey",
             { response ->
                 // indicate success somehow? ig start the new activity here
@@ -72,7 +76,7 @@ class Onboarding : AppCompatActivity() {
                 edit.putString("signature", signature)
                 edit.apply()
 
-                // go back to the main activity or smt
+                // go back to the main activity hopefully
                 finish()
             }
         ) {
