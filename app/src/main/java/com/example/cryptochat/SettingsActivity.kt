@@ -25,7 +25,6 @@ import java.util.HashMap
 import android.Manifest
 import android.content.Intent
 import android.provider.MediaStore
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 
 const val REQUEST_GALLERY_CODE = 300
@@ -36,6 +35,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        supportActionBar?.title = "Settings"
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         var queue = viewModel.getRequestQueue()
         if (queue == null) {

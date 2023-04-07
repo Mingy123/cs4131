@@ -7,4 +7,18 @@
     <string name="create_group_success">Successfully created a new group!</string>
     <string name="clipboard_success">Copied to clipboard</string>
     <string name="jump_newest_msg">Jump to newest message when you select the message box</string>
+
+    <string name="channelID">cryptochat.notifications</string>
+    <string name="channelName">Messages</string>
+    <string name="channelDesc">sent in a chat that you aren\'t watching</string>
+
+    <string name="app_info_title">ECDSA - Elliptic Curve Digital Signature Algorithm</string>
+    <string name="app_info_t1">What is a "Digital Signature"?</string>
+    <string name="app_info_p1">Imagine you have a private key, essentially your password. From this private key you can mathematically generate a public key such that it is impossible for someone to find out your private key using that public key.</string>
+    <string name="app_info_t2">But wait, there\'s more!</string>
+    <string name="app_info_p2">Using your private key, you can "sign" a message to prove that you (the identity associated with your public key) is the one who sent it.</string>
+    <string name="app_info_t3">Sounds like dark magic?</string>
+    <string name="app_info_p3">The private key is simply one number, while the signature and public key is only two nnumbers.
+Of course, the numbers are very large - 256 bits long or up to 10**79
+We simply use the magic of cryptography to ensure that these systems remain practically uncrackable! This also means that we need people like Tan Junheng to keep our systems safe !!!</string>
 </resources>

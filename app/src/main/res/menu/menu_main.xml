@@ -14,12 +14,18 @@
             android:icon="@drawable/baseline_person_24"
             android:title="Contacts" />
         <item
+            android:id="@+id/menu_app_info"
+            android:orderInCategory="100"
+            app:showAsAction="ifRoom"
+            android:icon="@drawable/baseline_info_24"
+            android:title="About App" />
+        <item
             android:id="@+id/menu_new_group"
             app:showAsAction="never"
             android:title="Create Group" />
         <item
             android:id="@+id/action_settings"
-            android:orderInCategory="100"
+            android:orderInCategory="99"
             android:title="Settings"
             app:showAsAction="never" />
     </group>

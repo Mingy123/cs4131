@@ -3,7 +3,6 @@ package com.example.cryptochat.contact
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -30,6 +29,7 @@ class ContactsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_contacts)
+        supportActionBar?.title = "Saved Users"
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         var queue = viewModel.getRequestQueue()
         if (queue == null) {

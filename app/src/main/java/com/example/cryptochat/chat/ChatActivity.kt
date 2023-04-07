@@ -1,7 +1,11 @@
 package com.example.cryptochat.chat
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -50,6 +54,10 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var queue: RequestQueue
     private lateinit var connection: HttpURLConnection
 
+    private var active = false
+    private lateinit var notificationManager: NotificationManager
+    private lateinit var channelID: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -57,10 +65,13 @@ class ChatActivity : AppCompatActivity() {
         val privkey = BigInteger(spf.getString("keypair", null)!!.split(',')[1], 16)
         val keyPair = EcKeyGenerator.newInstance(privkey, Secp256k1)
         val user = keyPair.publicKey.toString()
+        channelID = getString(R.string.channelID)
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        createNotificationChannel(getString(R.string.channelID),
+            getString(R.string.channelName), getString(R.string.channelDesc))
 
         // wallpaper wow
         val imageUri = spf.getString("wallpaper", null)
-        for (i in 0..10) Log.d("mingy", imageUri.toString())
         val imageView = findViewById<ImageView>(R.id.chatWallpaper)
         if (imageUri == null) imageView.visibility = View.INVISIBLE
         else imageView.setImageURI(Uri.parse(imageUri))
@@ -155,6 +166,8 @@ class ChatActivity : AppCompatActivity() {
             val reader = connection.inputStream.bufferedReader(Charsets.UTF_8)
 
             while (true) {
+                Log.d("mingy", "eventstream is listening...")
+                Log.d("mingy", "Active: $active")
                 val line = withContext(Dispatchers.IO) {
                     reader.readLine()
                 }
@@ -168,19 +181,45 @@ class ChatActivity : AppCompatActivity() {
 
                     if (dataField != null) {
                         val message = Gson().fromJson(dataField, Message::class.java)
-                        if (message.sender == user) return@launch
-                        // Do something with the message
+                        if (message.sender == user) continue
                         withContext(Dispatchers.Main) {
                             messageList.add(message)
                             adapter.notifyItemInserted(messageList.size - 1)
                             messageListView.scrollToPosition(messageList.size - 1)
                         }
+
+                        if (!active) {
+                            // send notification
+                            val username = usernameFromPubkey(this@ChatActivity, message.sender) ?: message.sender
+                            sendNotification(username, message.content)
+                        }
                     }
                 }
             }
         }
-        //connection.disconnect()
     }
+
+    private fun createNotificationChannel(id: String, name: String, description: String){
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(id, name, importance)
+        channel.description = description
+        channel.enableLights(true)
+        channel.lightColor = Color.RED
+        channel.enableVibration(true)
+        channel.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    var notifID = 80
+    fun sendNotification (title: String, content: String){
+        val notification = Notification.Builder(this, channelID)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setChannelId(channelID).build()
+        notificationManager.notify(notifID++, notification)
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_chat, menu)
@@ -228,6 +267,16 @@ class ChatActivity : AppCompatActivity() {
                 return new
             }
         }
+    }
+
+    override fun onResume() {
+        active = true
+        super.onResume()
+    }
+
+    override fun onPause() {
+        active = false
+        super.onPause()
     }
 }
 
