@@ -1,5 +1,8 @@
 package com.example.cryptochat
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -7,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import com.android.volley.Request.Method
@@ -22,6 +26,8 @@ class Onboarding : AppCompatActivity() {
     private lateinit var server: EditText
     private lateinit var privkey: EditText
     private lateinit var requestQueue: RequestQueue
+    private lateinit var lockedImage: ImageView
+    private lateinit var unlockImage: ImageView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
@@ -39,6 +45,9 @@ class Onboarding : AppCompatActivity() {
         server.setText(spf.getString("server", ""))
         val keyPair = spf.getString("keypair", null)
         if (keyPair != null) privkey.setText(keyPair.split(',')[1])
+
+        lockedImage = findViewById(R.id.onboardingLock)
+        unlockImage = findViewById(R.id.onboardingUnlock)
     }
 
     fun genRandomKey(view: View) {
@@ -59,6 +68,24 @@ class Onboarding : AppCompatActivity() {
         // check that the user is in the server using
         val request = StringRequest(Method.GET, "$host/user-info?pubkey=$pubkey",
             { response ->
+                // fucking animations
+                val fade = ValueAnimator.ofFloat(1f, 0f)
+                fade.apply {
+                    duration = 300
+                    addUpdateListener { animator ->
+                        val value = animator.animatedValue as Float
+                        lockedImage.alpha = value
+                        unlockImage.alpha = 1f - value
+                    }
+                    addListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator) {
+                            // go back to the main activity hopefully
+                            finish()
+                        }
+                    })
+
+                }
+                fade.start()
                 // indicate success somehow? ig start the new activity here
                 val gson = Gson()
                 val user = gson.fromJson(response, User::class.java)!!
@@ -75,9 +102,6 @@ class Onboarding : AppCompatActivity() {
                 edit.putString("username", user.username)
                 edit.putString("signature", signature)
                 edit.apply()
-
-                // go back to the main activity hopefully
-                finish()
             }
         ) {
             // dialog alerting that either the server is wrong or the pubkey does not exist.

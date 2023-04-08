@@ -2,7 +2,6 @@ package com.example.cryptochat
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.snackbar.Snackbar
@@ -80,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                     { response ->
                         Snackbar.make(view, response, Snackbar.LENGTH_SHORT).show()
                         if (response == "success")
-                            refreshGroups { recyclerView.scrollToPosition(groupList.size-1) }
+                            refreshGroups { recyclerView.smoothScrollToPosition(groupList.size-1) }
                         joinGroupDialog.dismiss()
                     }, {
                         Toast.makeText(applicationContext, getString(R.string.network_error),
@@ -148,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_new_group -> {
                 queue.add(AuthorisedRequest(Method.POST, "/create-group",
                     {
-                        refreshGroups { recyclerView.scrollToPosition(groupList.size-1) }
+                        refreshGroups { recyclerView.smoothScrollToPosition(groupList.size-1) }
                         Snackbar.make(recyclerView, getString(R.string.create_group_success),
                             Snackbar.LENGTH_SHORT).show()
                     }, {
